@@ -1,0 +1,5 @@
+menuconfig LIBSCAMPER
+	bool "scamper with TNT"
+	default n
+	select LIBMUSL
+	select LIBLWIP
