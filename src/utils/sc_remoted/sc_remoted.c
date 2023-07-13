@@ -1514,7 +1514,7 @@ static int serversocket_accept(int ss)
   sc_master_t *ms = NULL;
   socklen_t slen;
   int inet_fd = -1;
-
+  printf("serversocket_accept\n");
   slen = sizeof(ss);
   if((inet_fd = accept(ss, (struct sockaddr *)&sas, &slen)) == -1)
     {
@@ -2069,25 +2069,25 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef _WIN32
-  // if(signal(SIGPIPE, SIG_IGN) == SIG_ERR)
-  //   {
-  //     remote_debug(__func__, "could not ignore SIGPIPE");
-  //     return -1;
-  //   }
+  if(signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    {
+      remote_debug(__func__, "could not ignore SIGPIPE");
+      return -1;
+    }
 
-  // sigemptyset(&si_sa.sa_mask);
-  // si_sa.sa_flags   = 0;
-  // si_sa.sa_handler = remoted_sig;
-  // if(sigaction(SIGHUP, &si_sa, 0) == -1)
-  //   {
-  //     remote_debug(__func__, "could not set sigaction for SIGHUP");
-  //     return -1;
-  //   }
-  // if(sigaction(SIGINT, &si_sa, 0) == -1)
-  //   {
-  //     remote_debug(__func__, "could not set sigaction for SIGINT");
-  //     return -1;
-  //   }
+  sigemptyset(&si_sa.sa_mask);
+  si_sa.sa_flags   = 0;
+  si_sa.sa_handler = remoted_sig;
+  if(sigaction(SIGHUP, &si_sa, 0) == -1)
+    {
+      remote_debug(__func__, "could not set sigaction for SIGHUP");
+      return -1;
+    }
+  if(sigaction(SIGINT, &si_sa, 0) == -1)
+    {
+      remote_debug(__func__, "could not set sigaction for SIGINT");
+      return -1;
+    }
 #endif
 
   if(unixdomain_direxists() != 0 || serversocket_init() != 0)

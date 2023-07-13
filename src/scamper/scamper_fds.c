@@ -628,6 +628,8 @@ static int poll_fdc = 0;
 
 static void fds_poll_check(short event, int rc, int count)
 {
+
+  printf("fds_poll_check: event=%d rc=%d count=%d\n", event, rc, count);
   scamper_fd_t *fd;
   int i;
 

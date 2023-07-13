@@ -836,7 +836,7 @@ static int privsep_recv_fd(void)
 /*
  * privsep_do
  *
- * this is the only piece of code with root priviledges.  we use it to
+ * this is the only piece of code with root privileges.  we use it to
  * create raw sockets, routing/netlink sockets, BPF/PF_PACKET sockets, and
  * ordinary files that scamper itself cannot do by itself.
  */
@@ -940,6 +940,7 @@ static int privsep_do(void)
   }
 
   close(root_fd);
+  printf("privsep_do: exiting\n");
   return ret;
 }
 
@@ -1312,14 +1313,73 @@ int scamper_privsep_init()
    * open up the unix domain sockets that will allow the prober to talk
    * with the priviledged process
    */
-  /*if(socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1)
-    {
-      printerror(errno, strerror, __func__, "could not socketpair");
-      return -1;
-    }
-*/
-  lame_fd = sockets[0];
-  root_fd = sockets[1];
+  // if(socketpair(AF_INET, SOCK_STREAM, 0, sockets) == -1)
+  //   {
+  //     printerror(errno, strerror, __func__, "could not socketpair");
+  //     return -1;
+  //   }
+
+  #if CONFIG_LIBSCAMPER_ISROOT
+  printf("scamper_privsep_init: I am root\n");
+  int serverSocket;
+  struct sockaddr_in serverAddress, clientAddress;
+
+  serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+  if (serverSocket < 0)
+  {
+    printerror(errno, strerror, __func__, "could not create socket");
+    return -1;
+  }
+
+  serverAddress.sin_family = AF_INET;
+  serverAddress.sin_addr.s_addr = INADDR_ANY;
+  serverAddress.sin_port = htons(12346);
+
+  if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+  {
+    printerror(errno, strerror, __func__, "could not bind socket");
+    return -1;
+  }
+
+  if (listen(serverSocket, 5) < 0)
+  {
+    printerror(errno, strerror, __func__, "could not listen on socket");
+    return -1;
+  }
+
+  printf("Root process Listening on port 12346\n");
+
+  int clientAddressLen = sizeof(clientAddress);
+  root_fd = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientAddressLen);
+  printf("Root process accepted connection\n");
+  if (root_fd < 0)
+  {
+    printerror(errno, strerror, __func__, "could not accept connection");
+    return -1;
+  }
+  
+  privsep_do();
+  #else
+
+  
+
+  printf("scamper_privsep_init: I am lame\n");
+  struct sockaddr_in serverAddress;
+
+  lame_fd = socket(AF_INET, SOCK_STREAM, 0);
+  serverAddress.sin_family = AF_INET;
+  serverAddress.sin_addr.s_addr = inet_addr("172.44.0.3");
+  serverAddress.sin_port = htons(12346);
+  printf("Lame process connecting to root\n");
+  if(connect(lame_fd, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+  {
+    printerror(errno, strerror, __func__, "could not connect to server");
+    return -1;
+  }
+
+  printf("Lame process connected to root\n");
+
+  #endif;
 
   if ((cmsgbuf = malloc_zero(CMSG_SPACE(sizeof(int)))) == NULL)
   {
@@ -1342,7 +1402,6 @@ int scamper_privsep_init()
   //     exit(ret);
   //   }
 
-  privsep_do();
 
   /* set our copy of the root_pid to the relevant process id */
   root_pid = pid;

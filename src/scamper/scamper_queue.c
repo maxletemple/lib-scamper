@@ -343,10 +343,9 @@ struct scamper_task *scamper_queue_select()
 struct scamper_task *scamper_queue_getdone(const struct timeval *tv)
 {
   scamper_queue_t *sq;
-
   if((sq = (scamper_queue_t *)heap_head_item(done_queue)) == NULL)
     return NULL;
-
+  
   if(timeval_cmp(tv, &sq->timeout) >= 0)
     {
       queue_unlink(sq);

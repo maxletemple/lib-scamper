@@ -35,7 +35,7 @@
 #define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the `fork' function. */
-#define HAVE_FORK 1
+#undef HAVE_FORK
 
 /* Define to 1 if you have the `ftruncate' function. */
 #define HAVE_FTRUNCATE 1
@@ -291,6 +291,7 @@
 
 /* Defined to 1 if we don't want privilege separation */
 /* #undef WITHOUT_PRIVSEP */
+#define WITHOUT_PRIVSEP 1
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the

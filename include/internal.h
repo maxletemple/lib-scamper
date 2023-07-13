@@ -44,6 +44,7 @@ typedef unsigned short sa_family_t;
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <uk/config.h>
 
 #ifdef _WIN32
 #include <winsock2.h>

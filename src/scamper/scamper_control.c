@@ -784,6 +784,7 @@ static char *client_tostr(void *param, char *buf, size_t len)
 #ifndef _WIN32
 static int command_attach(client_t *client, char *buf)
 {
+  printf("command_attach\n");
   scamper_source_params_t ssp;
   scamper_file_t *sf;
   char sab[128];
@@ -2021,6 +2022,7 @@ static int client_attached_cb(client_t *client, uint8_t *buf, size_t len)
 
 static int client_interactive_cb(client_t *client, uint8_t *buf, size_t len)
 {
+  printf("client_interactive_cb: %s\n", buf);
   static command_t handlers[] = {
 #ifndef _WIN32
     {"attach",     command_attach},
@@ -2041,7 +2043,7 @@ static int client_interactive_cb(client_t *client, uint8_t *buf, size_t len)
 
   /* XXX: should check for null? */
   next = string_nextword((char *)buf);
-
+  printf("client_interactive_cb: next: %s\n", next);
   if(command_handler(handlers,handler_cnt,client,(char *)buf,next,&ret) == -1)
     {
       client_send(client, "ERR unhandled command '%s'", buf);
@@ -2060,6 +2062,7 @@ static int client_interactive_cb(client_t *client, uint8_t *buf, size_t len)
  */
 static int client_read_line(void *param, uint8_t *buf, size_t len)
 {
+  printf("client_read_line\n");
   static int (*const func[])(client_t *, uint8_t *, size_t) = {
     client_interactive_cb,   /* CLIENT_MODE_INTERACTIVE == 0x00 */
     client_attached_cb,      /* CLIENT_MODE_ATTACHED    == 0x01 */
@@ -3193,6 +3196,7 @@ static int remote_reconnect(void *param)
 
 static void control_accept(const int fd, void *param)
 {
+  printf("control_accept\n");
   struct sockaddr_storage ss;
   socklen_t socklen;
   client_t *c = NULL;
@@ -3295,6 +3299,8 @@ int scamper_control_add_unix(const char *file)
   struct sockaddr_un sn;
   uid_t uid;
 
+  printf("WARNING: running without privilege separation\n");
+
   if(sockaddr_compose_un((struct sockaddr *)&sn, file) != 0)
     {
       printerror(errno, strerror, __func__, "could not compose socket");
@@ -3356,7 +3362,7 @@ int scamper_control_add_inet(const char *ip, int port)
   struct sockaddr *sa = (struct sockaddr *)&sas;
   struct in_addr in;
   int af = AF_INET, fd = -1, opt;
-  printf("scamper_control_add_inet\n");
+  
   if(ip != NULL)
     {
       if(sockaddr_compose_str(sa, ip, port) != 0)
@@ -3405,7 +3411,7 @@ int scamper_control_add_inet(const char *ip, int port)
 		   "could not bind to %s:%d", ip, port);
       goto err;
     }
-    
+
   /* tell the system we want to listen for new clients on this socket */
   if(listen(fd, -1) != 0)
     {
@@ -3419,7 +3425,8 @@ int scamper_control_add_inet(const char *ip, int port)
       printerror(errno, strerror, __func__, "could not malloc control_inet_t");
       return -1;
     }
-  printf("scamper_control_add_inet: success\n");
+  printf("listening on %s:%d\n", ip, port);
+
   return 0;
 
  err:
